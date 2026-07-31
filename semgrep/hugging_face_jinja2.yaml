@@ -1,0 +1,68 @@
+rules:
+  - id: jinja2-python-object-graph-payload
+    languages:
+      - generic
+    severity: ERROR
+    message: >
+      Detected a Jinja2 expression that traverses Python internals. This may be
+      a server-side template-injection payload capable of arbitrary code
+      execution.
+    metadata:
+      category: security
+      technology:
+        - jinja2
+      confidence: HIGH
+      references:
+        - https://huggingface.co/blog/agent-intrusion-technical-timeline
+    patterns:
+      - pattern-regex: '(?is)\{\{.{0,1000}(?:__globals__|__builtins__|__subclasses__|__mro__).{0,1000}\}\}'
+
+  - id: dynamic-jinja2-template-construction
+    languages:
+      - python
+    severity: WARNING
+    message: >
+      A nonliteral value is being compiled as a Jinja2 template. If this value
+      can be influenced by an untrusted dataset, configuration, request, or
+      file, the code may permit server-side template injection.
+    metadata:
+      category: security
+      technology:
+        - python
+        - jinja2
+      confidence: MEDIUM
+      cwe:
+        - CWE-1336
+    patterns:
+      - pattern-either:
+          - pattern: jinja2.Template($INPUT)
+          - pattern: Template($INPUT)
+          - pattern: $ENV.from_string($INPUT)
+      - pattern-not: jinja2.Template("...")
+      - pattern-not: Template("...")
+      - pattern-not: $ENV.from_string("...")
+
+  - id: dynamic-jinja2-template-rendering
+    languages:
+      - python
+    severity: ERROR
+    message: >
+      A dynamically constructed Jinja2 template is rendered. Verify that the
+      template source is fully trusted; escaping template variables does not
+      make an attacker-controlled template safe.
+    metadata:
+      category: security
+      technology:
+        - python
+        - jinja2
+      confidence: MEDIUM
+      cwe:
+        - CWE-1336
+    patterns:
+      - pattern-either:
+          - pattern: jinja2.Template($INPUT).render(...)
+          - pattern: Template($INPUT).render(...)
+          - pattern: $ENV.from_string($INPUT).render(...)
+      - pattern-not: jinja2.Template("...").render(...)
+      - pattern-not: Template("...").render(...)
+      - pattern-not: $ENV.from_string("...").render(...)
