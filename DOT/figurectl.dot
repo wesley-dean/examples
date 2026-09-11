@@ -1,0 +1,41 @@
+digraph figurectl_processing_model {
+    rankdir=LR;
+
+    source [
+        label="Markdown source\npaired text + DOT figures"
+    ];
+
+    requested [
+        label="Requested output\ntext | dot | svg | png",
+        shape=note
+    ];
+
+    select [
+        label="select\nchoose authored representation"
+    ];
+
+    render [
+        label="render\nmaterialize required asset"
+    ];
+
+    replace [
+        label="replace\nemit ordinary Markdown"
+    ];
+
+    output [
+        label="Publication Markdown\n+ generated assets"
+    ];
+
+    source -> select;
+    requested -> select;
+
+    select -> render [
+        label="text or DOT"
+    ];
+
+    render -> replace [
+        label="txt / dot / svg / png"
+    ];
+
+    replace -> output;
+}
